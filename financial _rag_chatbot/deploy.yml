@@ -1,0 +1,69 @@
+name: Deploy Flask App to Cloud Run
+
+on:
+  push:
+    branches:
+      - main  # Trigger on pushes to the main branch
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    # Step 1: Checkout the code
+    - name: Checkout Code
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0  # Fetch the entire repository
+
+    # Step 2: Debug directory structure
+    - name: Debug Directory Structure
+      run: ls -R
+
+    # Step 3: Authenticate with Google Cloud
+    - name: Set up Google Cloud authentication
+      uses: google-github-actions/auth@v1
+      with:
+        credentials_json: ${{ secrets.GCP_CREDENTIALS }}
+
+    # Step 4: Configure gcloud CLI
+    - name: Set up gcloud CLI
+      run: |
+        gcloud config set project theta-function-429605-j0
+        gcloud config set compute/region us-east1
+
+    # Step 5: Build and push Docker image
+    - name: Build and Push Docker Image
+      run: |
+        IMAGE_NAME="gcr.io/theta-function-429605-j0/flask-app:latest"
+
+        # Build the Docker image using the repository root as context
+        docker build -t $IMAGE_NAME .
+
+        # Authenticate Docker with Google Cloud Artifact Registry
+        gcloud auth configure-docker gcr.io
+
+        # Push the Docker image to Artifact Registry
+        docker push $IMAGE_NAME
+
+    # Step 6: Deploy to Cloud Run
+    - name: Deploy to Cloud Run
+      run: |
+        IMAGE_NAME="gcr.io/theta-function-429605-j0/flask-app:latest"
+
+        # Deploy the Docker image to Cloud Run
+        gcloud run deploy flask-app \
+          --image $IMAGE_NAME \
+          --region us-east1 \
+          --platform managed \
+          --allow-unauthenticated \
+          --port 8085
+
+    # Step 7: Output Cloud Run Service URL
+    - name: Fetch Cloud Run Service URL
+      run: |
+        SERVICE_URL=$(gcloud run services describe flask-app \
+          --region us-east1 \
+          --format "value(status.url)")
+        echo "Flask App deployed successfully! Access it here: $SERVICE_URL"

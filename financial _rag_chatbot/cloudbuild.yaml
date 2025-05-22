@@ -1,0 +1,30 @@
+steps:
+  # Step 1: Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'build',
+      '-t', 'us-east1-docker.pkg.dev/theta-function-429605-j0/my-repo/fask-app:$(SHORT_SHA)',
+      '.'
+    ]
+
+  # Step 2: Push the image to Artifact Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: [
+      'push',
+      'us-east1-docker.pkg.dev/theta-function-429605-j0/my-repo/flask-app:$(SHORT_SHA)'
+    ]
+
+  # Step 3: Deploy the container image to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'bash'
+    args: ['-c', "
+      gcloud run deploy my-app \
+        --image us-east1-docker.pkg.dev/theta-function-429605-j0/my-repo/flask-app:$(SHORT_SHA) \
+        --platform managed \
+        --region us-east1 \
+        --allow-unauthenticated
+    "]
+
+images:
+  - 'us-east1-docker.pkg.dev/theta-function-429605-j0/my-repo/flask-app:$(SHORT_SHA)'
+
