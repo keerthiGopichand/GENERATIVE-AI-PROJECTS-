@@ -1,0 +1,14 @@
+langchain-astradb
+langchain
+langchain_community
+datasets
+pypdf
+python-dotenv
+flask
+sentence-transformers
+langchain-ollama
+celery
+redis
+gunicorn
+
+-e .
