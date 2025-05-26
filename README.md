@@ -24,7 +24,7 @@ Model: LLaMA 3.1-8b (Ollama), HuggingFace sentence-transformers
 Database: AstraDB (vector storage for embeddings)
 Message Queue: Redis
 Task Management: Celery
-Frontend: STRAMLITE, DJANGO, Flask
+Frontend: STREMLIT
 
 
 
